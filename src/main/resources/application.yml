@@ -1,0 +1,10 @@
+server:
+  port: 5095
+spring:
+  application:
+    name: budgerigar-console
+  profiles:
+    active: local
+
+
+    

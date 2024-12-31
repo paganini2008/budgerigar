@@ -1,19 +1,20 @@
 package com.github.budgerigar;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
  * 
- * @Description: BgDocument
+ * @Description: BgDocumentDto
  * @Author: Fred Feng
  * @Date: 01/12/2024
  * @Version 1.0.0
  */
 @Data
-public class BgDocument {
+public class BgDocumentDto {
 
-    private Integer id;
+    private Serializable id;
     private String name;
     private String title;
     private String extention;

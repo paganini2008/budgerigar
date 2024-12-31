@@ -5,6 +5,10 @@ spring:
     name: budgerigar-console
   profiles:
     active: local
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 100MB
 
 
     

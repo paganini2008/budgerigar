@@ -1,6 +1,7 @@
 package com.github.budgerigar.db;
 
 import static com.github.budgerigar.db.jooq.tables.BgrigarDocument.BGRIGAR_DOCUMENT;
+import java.io.Serializable;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -20,8 +21,8 @@ import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import com.github.budgerigar.BgDocument;
 import com.github.budgerigar.BgDocumentDeleteQuery;
+import com.github.budgerigar.BgDocumentDto;
 import com.github.budgerigar.BgDocumentIndexer;
 import com.github.budgerigar.BgDocumentPageQuery;
 import com.github.budgerigar.BgDocumentQuery;
@@ -52,17 +53,19 @@ public class JdbcBgDocumentIndexer implements BgDocumentIndexer {
     private DSLContext dsl;
 
     @Override
-    public boolean hasDocument(String name, String title, String path) {
-        Integer result = dsl
-                .selectCount().from(BGRIGAR_DOCUMENT).where(BGRIGAR_DOCUMENT.NAME.eq(name)
-                        .and(BGRIGAR_DOCUMENT.TITLE.eq(title)).and(BGRIGAR_DOCUMENT.PATH.eq(path)))
+    public boolean hasDocument(String name, String title, String ext, String path) {
+        Integer result = dsl.selectCount().from(BGRIGAR_DOCUMENT)
+                .where(BGRIGAR_DOCUMENT.NAME.eq(name).and(BGRIGAR_DOCUMENT.TITLE.eq(title))
+                        .and(BGRIGAR_DOCUMENT.EXTENTION.eq(ext))
+                        .and(BGRIGAR_DOCUMENT.PATH.eq(path)))
                 .fetchOne(0, Integer.class);
         return result != null && result.intValue() > 0;
     }
 
     @Override
-    public int saveDocument(BgDocument document) {
-        if (hasDocument(document.getName(), document.getTitle(), document.getPath())) {
+    public int saveDocument(BgDocumentDto document) {
+        if (hasDocument(document.getName(), document.getTitle(), document.getExtention(),
+                document.getPath())) {
             return updateDocument(document);
         } else {
             return persistDocument(document);
@@ -70,7 +73,7 @@ public class JdbcBgDocumentIndexer implements BgDocumentIndexer {
     }
 
     @Override
-    public int persistDocument(BgDocument document) {
+    public int persistDocument(BgDocumentDto document) {
         return dsl.insertInto(BGRIGAR_DOCUMENT)
                 .columns(BGRIGAR_DOCUMENT.NAME, BGRIGAR_DOCUMENT.TITLE, BGRIGAR_DOCUMENT.EXTENTION,
                         BGRIGAR_DOCUMENT.PATH, BGRIGAR_DOCUMENT.LAST_MODIFIED,
@@ -81,19 +84,19 @@ public class JdbcBgDocumentIndexer implements BgDocumentIndexer {
     }
 
     @Override
-    public int updateDocument(BgDocument document) {
+    public int updateDocument(BgDocumentDto document) {
         BgDocumentVo vo = getDocument(document.getId());
         if (vo != null) {
             Map<?, ?> kwargs = getUpdatedFieldMap(document, vo);
             if (MapUtils.isNotEmpty(kwargs)) {
                 return dsl.update(BGRIGAR_DOCUMENT).set(kwargs)
-                        .where(BGRIGAR_DOCUMENT.ID.eq(document.getId())).execute();
+                        .where(BGRIGAR_DOCUMENT.ID.eq((Integer) document.getId())).execute();
             }
         }
         return 0;
     }
 
-    private Map<?, ?> getUpdatedFieldMap(BgDocument document, BgDocumentVo vo) {
+    private Map<?, ?> getUpdatedFieldMap(BgDocumentDto document, BgDocumentVo vo) {
         Map<TableField<?, ?>, Object> kwargs = new HashMap<>();
         if (!StringUtils.equals(document.getContent(), vo.getContent())) {
             kwargs.put(BGRIGAR_DOCUMENT.CONTENT, document.getContent());
@@ -117,10 +120,10 @@ public class JdbcBgDocumentIndexer implements BgDocumentIndexer {
     }
 
     @Override
-    public BgDocumentVo getDocument(int id) {
-        Record record =
-                dsl.select().from(BGRIGAR_DOCUMENT).where(BGRIGAR_DOCUMENT.ID.eq(id)).fetchOne();
-        return transfer2Vo(record, true);
+    public BgDocumentVo getDocument(Serializable id) {
+        Record record = dsl.select().from(BGRIGAR_DOCUMENT)
+                .where(BGRIGAR_DOCUMENT.ID.eq((Integer) id)).fetchOne();
+        return transfer2Vo(record);
     }
 
     @Override
@@ -129,16 +132,20 @@ public class JdbcBgDocumentIndexer implements BgDocumentIndexer {
     }
 
     @Override
-    public int deleteDocument(int id) {
-        return dsl.deleteFrom(BGRIGAR_DOCUMENT).where(BGRIGAR_DOCUMENT.ID.eq(id)).execute();
+    public int deleteDocument(Serializable id) {
+        return dsl.deleteFrom(BGRIGAR_DOCUMENT).where(BGRIGAR_DOCUMENT.ID.eq((Integer) id))
+                .execute();
     }
 
     @Override
-    public int deleteDocument(String name, String title, String path) {
+    public int deleteDocument(String name, String title, String ext, String path) {
         DeleteConditionStep<BgrigarDocumentRecord> conditionStep =
                 dsl.deleteFrom(BGRIGAR_DOCUMENT).where(BGRIGAR_DOCUMENT.NAME.eq(name));
         if (StringUtils.isNotBlank(title)) {
             conditionStep = conditionStep.and(BGRIGAR_DOCUMENT.TITLE.eq(title));
+        }
+        if (StringUtils.isNotBlank(ext)) {
+            conditionStep = conditionStep.and(BGRIGAR_DOCUMENT.EXTENTION.eq(ext));
         }
         if (StringUtils.isNotBlank(path)) {
             conditionStep = conditionStep.and(BGRIGAR_DOCUMENT.PATH.eq(path));
@@ -190,21 +197,21 @@ public class JdbcBgDocumentIndexer implements BgDocumentIndexer {
                                             .like("%" + query.getKeyword() + "%")))
                             .orderBy(BGRIGAR_DOCUMENT.LAST_MODIFIED);
         }
-        if (query.getLimit() > 0) {
+        if (query.getMaxResults() > 0) {
             forUpdateStep = conditionStep.orderBy(BGRIGAR_DOCUMENT.LAST_MODIFIED)
-                    .limit(query.getLimit()).offset(query.getOffset());
+                    .limit(query.getMaxResults()).offset(query.getFrom());
         } else {
             forUpdateStep = conditionStep.orderBy(BGRIGAR_DOCUMENT.LAST_MODIFIED);
         }
         Result<org.jooq.Record> records =
                 forUpdateStep != null ? forUpdateStep.fetch() : conditionStep.fetch();
         if (records != null && records.size() > 0) {
-            return records.stream().map(r -> transfer2Vo(r, query.isDisplayContent())).toList();
+            return records.stream().map(r -> transfer2Vo(r)).toList();
         }
         return Collections.emptyList();
     }
 
-    private BgDocumentVo transfer2Vo(org.jooq.Record r, boolean displayContent) {
+    private BgDocumentVo transfer2Vo(org.jooq.Record r) {
         if (r == null) {
             return null;
         }
@@ -215,20 +222,17 @@ public class JdbcBgDocumentIndexer implements BgDocumentIndexer {
         vo.setExtention(r.get(BGRIGAR_DOCUMENT.EXTENTION));
         vo.setPath(r.get(BGRIGAR_DOCUMENT.PATH));
         vo.setLastModified(r.get(BGRIGAR_DOCUMENT.LAST_MODIFIED));
-        if (displayContent) {
-            vo.setContent(r.get(BGRIGAR_DOCUMENT.CONTENT));
-        }
         return vo;
     }
 
     @SneakyThrows
     @Override
-    public PageVo<BgDocumentVo> pageForDocument(BgDocumentPageQuery query) {
+    public PageVo pageForDocument(BgDocumentPageQuery query) {
         BgDocumentPageReader pageReader = new BgDocumentPageReader(query);
         PageResponse<BgDocumentVo> pageResponse =
-                pageReader.list(PageRequest.of(query.getPage(), query.getLimit()));
+                pageReader.list(PageRequest.of(query.getPage(), query.getMaxResults()));
         PageContent<BgDocumentVo> pageContent = pageResponse.getContent();
-        return new PageVo<>(pageContent.getContent(), pageResponse.getPageNumber(),
+        return new PageVo(pageContent.getContent(), pageResponse.getPageNumber(),
                 pageResponse.getPageSize(), pageResponse.getTotalRecords(),
                 pageContent.getNextToken());
     }
@@ -236,13 +240,13 @@ public class JdbcBgDocumentIndexer implements BgDocumentIndexer {
     @RequiredArgsConstructor
     private class BgDocumentPageReader implements PageReader<BgDocumentVo> {
 
-        private final BgDocumentQuery query;
+        private final BgDocumentPageQuery query;
 
         @Override
         public PageContent<BgDocumentVo> list(int pageNumber, int offset, int limit,
                 Object nextToken) throws SQLException {
-            query.setOffset(offset);
-            query.setLimit(limit);
+            query.setFrom(offset);
+            query.setMaxResults(limit);
             List<BgDocumentVo> list = queryForDocument(query);
             return new DefaultPageContent<>(list, null);
         }

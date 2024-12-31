@@ -10,6 +10,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
+import com.github.doodler.common.http.StringRestTemplate;
 
 /**
  * 
@@ -42,7 +43,7 @@ public class RestTemplateHtmlContentExtractor extends AbstractHtmlContentExtract
     @Override
     public void afterPropertiesSet() throws Exception {
         if (restTemplate == null) {
-            RestTemplate restTemplate = new RestTemplate();
+            RestTemplate restTemplate = new StringRestTemplate();
             SimpleClientHttpRequestFactory clientHttpRequestFactory =
                     new SimpleClientHttpRequestFactory();
             clientHttpRequestFactory.setConnectTimeout(connectionTimeout);

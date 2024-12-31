@@ -66,8 +66,9 @@ public class FavortiesContentReader implements FileContentReader {
                     content = htmlContentExtractor.extractHtml(URI.create(path));
                 } catch (Exception e) {
                     if (log.isErrorEnabled()) {
-                        log.error(e.getMessage(), e);
+                        log.error("[{}]: {}", path, e.getMessage(), e);
                     }
+                    content = "";
                 }
                 return new FileContent(fileName, title, "html", path,
                         lastModfied + (n++) * 60 * 1000, content);
@@ -90,6 +91,11 @@ public class FavortiesContentReader implements FileContentReader {
         return false;
     }
 
+    @Override
+    public int getOrder() {
+        return 1;
+    }
+
     public static void main(String[] args) throws Exception {
         RestTemplateHtmlContentExtractor contentExtractor = new RestTemplateHtmlContentExtractor();
         contentExtractor.afterPropertiesSet();
@@ -98,5 +104,7 @@ public class FavortiesContentReader implements FileContentReader {
                 contentReader.readContent(Paths.get("g:/bookmarks_01_12_2024.html"), new Context());
         DebugUtils.info(iterator);
     }
+
+
 
 }

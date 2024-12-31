@@ -17,5 +17,6 @@ import lombok.ToString;
 public class BgDocumentPageQuery extends BgDocumentQuery {
 
     private int page;
+    private Object nextToken;
 
 }

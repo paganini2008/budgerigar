@@ -4,6 +4,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Iterator;
+import org.springframework.core.Ordered;
 
 /**
  * 
@@ -12,7 +13,7 @@ import java.util.Iterator;
  * @Date: 30/11/2024
  * @Version 1.0.0
  */
-public interface FileContentReader {
+public interface FileContentReader extends Ordered {
 
     static final Charset defaultCharset = StandardCharsets.UTF_8;
 
@@ -20,4 +21,8 @@ public interface FileContentReader {
 
     boolean supportExtensions(Path path, Context context);
 
+    @Override
+    default int getOrder() {
+        return Ordered.LOWEST_PRECEDENCE;
+    }
 }

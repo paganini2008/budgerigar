@@ -10,7 +10,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Iterator;
 import java.util.List;
 import org.apache.commons.collections4.IteratorUtils;
-import com.github.budgerigar.BgDocument;
+import com.github.budgerigar.BgDocumentDto;
 import com.github.budgerigar.BgDocumentIndexer;
 import com.github.doodler.common.utils.BeanCopyUtils;
 import lombok.RequiredArgsConstructor;
@@ -64,7 +64,7 @@ public class FileWalker extends SimpleFileVisitor<Path> {
         while (iter.hasNext()) {
             try {
                 FileContent fileContent = iter.next();
-                BgDocument bgDocument = BeanCopyUtils.copyBean(fileContent, BgDocument.class);
+                BgDocumentDto bgDocument = BeanCopyUtils.copyBean(fileContent, BgDocumentDto.class);
                 int rows = bgDocumentIndexer.saveDocument(bgDocument);
                 log.info("Handled File: {}, Effected rows: {}", fileContent, rows);
             } catch (Exception e) {

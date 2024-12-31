@@ -14,6 +14,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <grpc.version>1.58.0</grpc.version>
     </properties>
 
     <dependencies>
@@ -27,6 +28,11 @@
             <groupId>com.github.doodler</groupId>
             <artifactId>doodler-common-jdbc</artifactId>
         </dependency>
+        
+        <dependency>
+            <groupId>com.github.doodler</groupId>
+            <artifactId>doodler-common-elasticsearch</artifactId>
+        </dependency> 
         
         <dependency>
             <groupId>commons-codec</groupId>
@@ -107,6 +113,7 @@
 		    <groupId>com.h2database</groupId>
 		    <artifactId>h2</artifactId>
 		</dependency>
+		
     </dependencies>
 
     <build>

@@ -1,4 +1,9 @@
 spring:
+  elasticsearch:
+    rest:
+      uris: http://192.168.159.1:9200
+      connection-timeout: 5000
+      read-timeout: 60000
   datasource:
     driverClassName: org.h2.Driver
     username: admin
@@ -10,3 +15,10 @@ spring:
       path: /h2-console
       settings.trace: false
       settings.web-allow-others: false
+      
+      
+
+logging:
+  level:
+    io.grpc: DEBUG
+    net.devh.boot.grpc: DEBUG

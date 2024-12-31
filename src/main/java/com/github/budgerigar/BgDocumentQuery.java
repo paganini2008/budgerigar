@@ -17,9 +17,9 @@ import lombok.ToString;
 public class BgDocumentQuery {
 
     private String keyword;
-    private int offset;
-    private int limit;
     private boolean file;
-    private boolean displayContent;
+    private String extension;
+    private int from;
+    private int maxResults;
 
 }

@@ -1,5 +1,6 @@
 package com.github.budgerigar;
 
+import java.io.Serializable;
 import java.util.List;
 import com.github.doodler.common.PageVo;
 
@@ -12,26 +13,26 @@ import com.github.doodler.common.PageVo;
  */
 public interface BgDocumentIndexer {
 
-    boolean hasDocument(String name, String title, String path);
+    boolean hasDocument(String name, String title, String ext, String path);
 
-    int saveDocument(BgDocument document);
+    int saveDocument(BgDocumentDto document);
 
-    int persistDocument(BgDocument document);
+    int persistDocument(BgDocumentDto document);
 
-    int updateDocument(BgDocument document);
+    int updateDocument(BgDocumentDto document);
 
-    BgDocumentVo getDocument(int id);
+    BgDocumentVo getDocument(Serializable id);
 
     int deleteDocument();
 
-    int deleteDocument(int id);
+    int deleteDocument(Serializable id);
 
     int deleteDocument(BgDocumentDeleteQuery query);
 
-    int deleteDocument(String name, String title, String path);
+    int deleteDocument(String name, String title, String ext, String path);
 
     List<BgDocumentVo> queryForDocument(BgDocumentQuery query);
 
-    PageVo<BgDocumentVo> pageForDocument(BgDocumentPageQuery query);
+    PageVo pageForDocument(BgDocumentPageQuery query);
 
 }

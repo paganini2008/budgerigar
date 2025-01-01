@@ -9,6 +9,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 /**
  * 
@@ -19,6 +20,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@ToString(onlyExplicitlyIncluded = true)
 @Setting(refreshInterval = "10s")
 @Document(indexName = BgDocument.INDEX_NAME)
 public class BgDocument {
@@ -27,18 +29,23 @@ public class BgDocument {
 
     @Id
     @Field(type = FieldType.Text, store = true)
+    @ToString.Include
     private String id;
 
     @Field(type = FieldType.Text, store = true, analyzer = "ik_smart", searchAnalyzer = "ik_smart")
+    @ToString.Include
     private String name;
 
     @Field(type = FieldType.Text, store = true, analyzer = "ik_smart", searchAnalyzer = "ik_smart")
+    @ToString.Include
     private String title;
 
     @Field(type = FieldType.Keyword, store = true)
+    @ToString.Include
     private String extention;
 
     @Field(type = FieldType.Keyword, store = true)
+    @ToString.Include
     private String path;
 
     @Field(type = FieldType.Date, store = true, format = {DateFormat.date_hour_minute_second})

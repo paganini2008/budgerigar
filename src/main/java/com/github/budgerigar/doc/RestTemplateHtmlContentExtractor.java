@@ -9,6 +9,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import com.github.doodler.common.http.StringRestTemplate;
 
@@ -37,7 +38,8 @@ public class RestTemplateHtmlContentExtractor extends AbstractHtmlContentExtract
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
             return responseEntity.getBody();
         }
-        return null;
+        throw new HttpClientErrorException(responseEntity.getStatusCode());
+
     }
 
     @Override

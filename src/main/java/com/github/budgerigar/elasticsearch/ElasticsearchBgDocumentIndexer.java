@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
+import org.elasticsearch.core.Map;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -15,6 +16,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.stereotype.Service;
 import com.github.budgerigar.BgDocumentIndexer;
 import com.github.budgerigar.pojo.BgDocumentDeleteQuery;
@@ -29,6 +31,7 @@ import com.github.doodler.common.page.PageRequest;
 import com.github.doodler.common.page.PageResponse;
 import com.github.doodler.common.utils.BeanCopyUtils;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 
@@ -37,6 +40,7 @@ import lombok.SneakyThrows;
  * @Date: 14/12/2024
  * @Version 1.0.0
  */
+@Slf4j
 @ConditionalOnProperty(name = "budgerigar.document.indexer", havingValue = "elasticsearch")
 @Service
 public class ElasticsearchBgDocumentIndexer implements BgDocumentIndexer {
@@ -49,21 +53,7 @@ public class ElasticsearchBgDocumentIndexer implements BgDocumentIndexer {
 
     @Override
     public boolean hasDocument(String name, String title, String ext, String path) {
-        NativeSearchQueryBuilder searchQueryBuilder = new NativeSearchQueryBuilder();
-        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-        if (StringUtils.isNotBlank(name)) {
-            boolQueryBuilder.filter(QueryBuilders.termQuery("name", name));
-        }
-        if (StringUtils.isNotBlank(title)) {
-            boolQueryBuilder.filter(QueryBuilders.termQuery("title", title));
-        }
-        if (StringUtils.isNotBlank(ext)) {
-            boolQueryBuilder.filter(QueryBuilders.termQuery("extention", ext));
-        }
-        if (StringUtils.isNotBlank(path)) {
-            boolQueryBuilder.filter(QueryBuilders.termQuery("path", path));
-        }
-        NativeSearchQuery searchQuery = searchQueryBuilder.withQuery(boolQueryBuilder).build();
+        Query searchQuery = getIdentifiableQuery(name, title, ext, path);
         return bgDocumentService.getCount(searchQuery, BgDocument.class) > 0;
     }
 
@@ -77,19 +67,34 @@ public class ElasticsearchBgDocumentIndexer implements BgDocumentIndexer {
     }
 
     @Override
-    public int persistDocument(BgDocumentDto document) {
-        if (document.getId() == null) {
-            document.setId(UUID.randomUUID().toString());
+    public int persistDocument(BgDocumentDto documentDto) {
+        BgDocument existingDocument =
+                bgDocumentService.searchOne(
+                        getIdentifiableQuery(documentDto.getName(), documentDto.getTitle(),
+                                documentDto.getExtention(), documentDto.getPath()),
+                        BgDocument.class);
+        if (existingDocument != null) {
+            BgDocument updatedBgDocument = BeanCopyUtils.copyBean(documentDto, BgDocument.class);
+            bgDocumentService.updateById(existingDocument.getId(), updatedBgDocument,
+                    BgDocument.INDEX_NAME);
+            log.info("Update BgDocument: {}", updatedBgDocument);
+            return 0;
+        } else {
+            BgDocument newBgDocument = BeanCopyUtils.copyBean(documentDto, BgDocument.class);
+            if (newBgDocument.getId() == null) {
+                newBgDocument.setId(UUID.randomUUID().toString());
+            }
+            newBgDocument = bgDocumentService.save(newBgDocument, BgDocument.INDEX_NAME);
+            log.info("Persist new BgDocument: {}", newBgDocument);
+            return newBgDocument != null ? 1 : 0;
         }
-        BgDocument bgDocument = BeanCopyUtils.copyBean(document, BgDocument.class);
-        bgDocument = bgDocumentService.save(bgDocument, BgDocument.INDEX_NAME);
-        return bgDocument != null ? 1 : 0;
     }
 
     @Override
-    public int updateDocument(BgDocumentDto document) {
-        BgDocument bgDocument = BeanCopyUtils.copyBean(document, BgDocument.class);
-        bgDocumentService.updateById((String) document.getId(), bgDocument, BgDocument.INDEX_NAME);
+    public int updateDocument(BgDocumentDto documentDto) {
+        BgDocument bgDocument = BeanCopyUtils.copyBean(documentDto, BgDocument.class);
+        bgDocumentService.updateById((String) documentDto.getId(), bgDocument,
+                BgDocument.INDEX_NAME);
         return 1;
     }
 
@@ -110,23 +115,28 @@ public class ElasticsearchBgDocumentIndexer implements BgDocumentIndexer {
         return id != null ? 1 : 0;
     }
 
-    @Override
-    public int deleteDocument(BgDocumentDeleteQuery query) {
+    private Query getIdentifiableQuery(String name, String title, String extenion, String path) {
         NativeSearchQueryBuilder searchQueryBuilder = new NativeSearchQueryBuilder();
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-        if (StringUtils.isNotBlank(query.getName())) {
-            boolQueryBuilder.filter(QueryBuilders.termQuery("name", query.getName()));
+        if (StringUtils.isNotBlank(name)) {
+            boolQueryBuilder.filter(QueryBuilders.termQuery("name", name));
         }
-        if (StringUtils.isNotBlank(query.getTitle())) {
-            boolQueryBuilder.filter(QueryBuilders.termQuery("title", query.getTitle()));
+        if (StringUtils.isNotBlank(title)) {
+            boolQueryBuilder.filter(QueryBuilders.termQuery("title", title));
         }
-        if (StringUtils.isNotBlank(query.getExtention())) {
-            boolQueryBuilder.filter(QueryBuilders.termQuery("extention", query.getExtention()));
+        if (StringUtils.isNotBlank(extenion)) {
+            boolQueryBuilder.filter(QueryBuilders.termQuery("extention", extenion));
         }
-        if (StringUtils.isNotBlank(query.getPath())) {
-            boolQueryBuilder.filter(QueryBuilders.termQuery("path", query.getPath()));
+        if (StringUtils.isNotBlank(path)) {
+            boolQueryBuilder.filter(QueryBuilders.termQuery("path", path));
         }
-        NativeSearchQuery searchQuery = searchQueryBuilder.withQuery(boolQueryBuilder).build();
+        return searchQueryBuilder.withQuery(boolQueryBuilder).build();
+    }
+
+    @Override
+    public int deleteDocument(BgDocumentDeleteQuery query) {
+        Query searchQuery = getIdentifiableQuery(query.getName(), query.getTitle(),
+                query.getExtention(), query.getPath());
         return (int) bgDocumentService.delete(searchQuery, BgDocument.class);
     }
 
@@ -190,7 +200,7 @@ public class ElasticsearchBgDocumentIndexer implements BgDocumentIndexer {
         DefaultElasticsearchPageReader(ElasticsearchRestTemplate elasticsearchRestTemplate,
                 BgDocumentPageQuery query) {
             super(elasticsearchRestTemplate, BgDocument.class, BgDocumentVo.class,
-                    query.getKeyword(), new String[] {"title", "content"});
+                    query.getKeyword(), Map.of("title", "must", "content", "should"));
             this.query = query;
         }
 

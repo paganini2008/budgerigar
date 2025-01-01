@@ -3,6 +3,7 @@ package com.github.budgerigar.doc;
 import java.net.URI;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.CookieManager;
 import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
@@ -34,16 +35,16 @@ public class HtmlUnitContentExtractor extends AbstractHtmlContentExtractor
     @Override
     public String extractHtml(URI uri) throws Exception {
         Page page = webClient.getPage(uri.toURL());
-        webClient.waitForBackgroundJavaScript(10000);
+        webClient.waitForBackgroundJavaScript(javaScriptTimeout);
         int responseStatusCode = page.getWebResponse().getStatusCode();
-        if (responseStatusCode == HttpStatus.OK.value()) {
+        if (HttpStatus.valueOf(responseStatusCode).is2xxSuccessful()) {
             if (page instanceof HtmlPage) {
                 return ((HtmlPage) page).asXml();
             } else if (page instanceof TextPage) {
                 return ((TextPage) page).getContent();
             }
         }
-        return "";
+        throw new HttpClientErrorException(HttpStatus.valueOf(responseStatusCode));
     }
 
     @Override

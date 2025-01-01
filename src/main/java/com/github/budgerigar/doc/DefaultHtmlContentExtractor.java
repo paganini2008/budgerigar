@@ -7,6 +7,7 @@ import org.jsoup.Connection;
 import org.jsoup.Connection.Response;
 import org.jsoup.Jsoup;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
 
 /**
  * 
@@ -33,7 +34,7 @@ public class DefaultHtmlContentExtractor extends AbstractHtmlContentExtractor {
         if (HttpStatus.valueOf(response.statusCode()).is2xxSuccessful()) {
             return response.body();
         }
-        return "";
+        throw new HttpClientErrorException(HttpStatus.valueOf(response.statusCode()));
     }
 
 }

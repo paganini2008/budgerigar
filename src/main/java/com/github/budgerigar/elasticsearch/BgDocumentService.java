@@ -2,7 +2,7 @@ package com.github.budgerigar.elasticsearch;
 
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.stereotype.Service;
-import com.github.doodler.common.elasticsearch.BasicCrudService;
+import com.github.doodler.common.elasticsearch.BasicElasticsearchCrudService;
 
 /**
  * 
@@ -12,7 +12,7 @@ import com.github.doodler.common.elasticsearch.BasicCrudService;
  * @Version 1.0.0
  */
 @Service
-public class BgDocumentService extends BasicCrudService<BgDocument> {
+public class BgDocumentService extends BasicElasticsearchCrudService<BgDocument> {
 
     public BgDocumentService(ElasticsearchRestTemplate elasticsearchTemplate) {
         super(elasticsearchTemplate);

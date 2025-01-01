@@ -2,13 +2,17 @@ server:
   port: 5095
 spring:
   application:
-    name: budgerigar-console
+    name: doodler-budgerigar-service
   profiles:
     active: local
   servlet:
     multipart:
       max-file-size: 50MB
       max-request-size: 100MB
+      
+budgerigar:
+  document:
+    indexer: elasticsearch
 
 
     

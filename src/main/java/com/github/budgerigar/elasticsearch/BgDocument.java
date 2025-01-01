@@ -2,6 +2,7 @@ package com.github.budgerigar.elasticsearch;
 
 import java.time.LocalDateTime;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -40,7 +41,7 @@ public class BgDocument {
     @Field(type = FieldType.Keyword, store = true)
     private String path;
 
-    @Field(type = FieldType.Date, store = true)
+    @Field(type = FieldType.Date, store = true, format = {DateFormat.date_hour_minute_second})
     private LocalDateTime lastModified;
 
     @Field(type = FieldType.Text, store = true, analyzer = "ik_smart", searchAnalyzer = "ik_smart")

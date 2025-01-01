@@ -21,19 +21,19 @@ import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import com.github.budgerigar.BgDocumentDeleteQuery;
-import com.github.budgerigar.BgDocumentDto;
 import com.github.budgerigar.BgDocumentIndexer;
-import com.github.budgerigar.BgDocumentPageQuery;
-import com.github.budgerigar.BgDocumentQuery;
-import com.github.budgerigar.BgDocumentVo;
 import com.github.budgerigar.db.jooq.tables.records.BgrigarDocumentRecord;
+import com.github.budgerigar.pojo.BgDocumentDeleteQuery;
+import com.github.budgerigar.pojo.BgDocumentDto;
+import com.github.budgerigar.pojo.BgDocumentPageQuery;
+import com.github.budgerigar.pojo.BgDocumentQuery;
+import com.github.budgerigar.pojo.BgDocumentVo;
 import com.github.doodler.common.PageVo;
-import com.github.doodler.common.jdbc.page.DefaultPageContent;
-import com.github.doodler.common.jdbc.page.PageContent;
-import com.github.doodler.common.jdbc.page.PageReader;
-import com.github.doodler.common.jdbc.page.PageRequest;
-import com.github.doodler.common.jdbc.page.PageResponse;
+import com.github.doodler.common.page.DefaultPageContent;
+import com.github.doodler.common.page.PageContent;
+import com.github.doodler.common.page.PageReader;
+import com.github.doodler.common.page.PageRequest;
+import com.github.doodler.common.page.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -199,7 +199,7 @@ public class JdbcBgDocumentIndexer implements BgDocumentIndexer {
         }
         if (query.getMaxResults() > 0) {
             forUpdateStep = conditionStep.orderBy(BGRIGAR_DOCUMENT.LAST_MODIFIED)
-                    .limit(query.getMaxResults()).offset(query.getFrom());
+                    .limit(query.getMaxResults()).offset(query.getOffset());
         } else {
             forUpdateStep = conditionStep.orderBy(BGRIGAR_DOCUMENT.LAST_MODIFIED);
         }
@@ -240,12 +240,12 @@ public class JdbcBgDocumentIndexer implements BgDocumentIndexer {
     @RequiredArgsConstructor
     private class BgDocumentPageReader implements PageReader<BgDocumentVo> {
 
-        private final BgDocumentPageQuery query;
+        private final BgDocumentQuery query;
 
         @Override
         public PageContent<BgDocumentVo> list(int pageNumber, int offset, int limit,
                 Object nextToken) throws SQLException {
-            query.setFrom(offset);
+            query.setOffset(offset);
             query.setMaxResults(limit);
             List<BgDocumentVo> list = queryForDocument(query);
             return new DefaultPageContent<>(list, null);

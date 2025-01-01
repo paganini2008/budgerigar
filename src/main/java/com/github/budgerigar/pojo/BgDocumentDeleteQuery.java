@@ -1,4 +1,4 @@
-package com.github.budgerigar;
+package com.github.budgerigar.pojo;
 
 import java.time.LocalDateTime;
 import lombok.Data;

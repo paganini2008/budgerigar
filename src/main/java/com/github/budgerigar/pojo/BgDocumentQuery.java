@@ -1,4 +1,4 @@
-package com.github.budgerigar;
+package com.github.budgerigar.pojo;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -19,7 +19,7 @@ public class BgDocumentQuery {
     private String keyword;
     private boolean file;
     private String extension;
-    private int from;
-    private int maxResults;
+    private int offset;
+    private int maxResults = 10;
 
 }

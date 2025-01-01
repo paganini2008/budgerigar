@@ -18,6 +18,11 @@ public class BgDocumentFileMonitorHandler implements FileMonitorHandler {
     private BgDocumentManager documentManager;
 
     @Override
+    public void onFileChange(File file) {
+        documentManager.saveDocument(file.toPath(), new Context());
+    }
+
+    @Override
     public void onFileCreate(File file) {
         documentManager.saveDocument(file.toPath(), new Context());
     }

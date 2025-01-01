@@ -2,6 +2,11 @@ package com.github.budgerigar;
 
 import java.io.Serializable;
 import java.util.List;
+import com.github.budgerigar.pojo.BgDocumentDeleteQuery;
+import com.github.budgerigar.pojo.BgDocumentDto;
+import com.github.budgerigar.pojo.BgDocumentPageQuery;
+import com.github.budgerigar.pojo.BgDocumentQuery;
+import com.github.budgerigar.pojo.BgDocumentVo;
 import com.github.doodler.common.PageVo;
 
 /**

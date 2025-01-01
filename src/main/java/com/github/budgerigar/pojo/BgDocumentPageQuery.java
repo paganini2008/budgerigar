@@ -1,4 +1,4 @@
-package com.github.budgerigar;
+package com.github.budgerigar.pojo;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -13,10 +13,10 @@ import lombok.ToString;
  */
 @Getter
 @Setter
-@ToString(callSuper = true)
+@ToString
 public class BgDocumentPageQuery extends BgDocumentQuery {
 
-    private int page;
+    private int page = 1;
     private Object nextToken;
 
 }

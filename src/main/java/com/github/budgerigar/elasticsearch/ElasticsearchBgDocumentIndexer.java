@@ -5,23 +5,28 @@ import java.util.List;
 import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.stereotype.Service;
-import com.github.budgerigar.BgDocumentDeleteQuery;
-import com.github.budgerigar.BgDocumentDto;
 import com.github.budgerigar.BgDocumentIndexer;
-import com.github.budgerigar.BgDocumentPageQuery;
-import com.github.budgerigar.BgDocumentQuery;
-import com.github.budgerigar.BgDocumentVo;
+import com.github.budgerigar.pojo.BgDocumentDeleteQuery;
+import com.github.budgerigar.pojo.BgDocumentDto;
+import com.github.budgerigar.pojo.BgDocumentPageQuery;
+import com.github.budgerigar.pojo.BgDocumentQuery;
+import com.github.budgerigar.pojo.BgDocumentVo;
 import com.github.doodler.common.PageVo;
-import com.github.doodler.common.jdbc.page.PageContent;
-import com.github.doodler.common.jdbc.page.PageRequest;
-import com.github.doodler.common.jdbc.page.PageResponse;
+import com.github.doodler.common.elasticsearch.KeywordBasedElasticsearchPageReader;
+import com.github.doodler.common.page.PageContent;
+import com.github.doodler.common.page.PageRequest;
+import com.github.doodler.common.page.PageResponse;
 import com.github.doodler.common.utils.BeanCopyUtils;
 import lombok.SneakyThrows;
 
@@ -34,7 +39,7 @@ import lombok.SneakyThrows;
  */
 @ConditionalOnProperty(name = "budgerigar.document.indexer", havingValue = "elasticsearch")
 @Service
-public class ElasticSearchBgDocumentIndexer implements BgDocumentIndexer {
+public class ElasticsearchBgDocumentIndexer implements BgDocumentIndexer {
 
     @Autowired
     private BgDocumentService bgDocumentService;
@@ -139,8 +144,7 @@ public class ElasticSearchBgDocumentIndexer implements BgDocumentIndexer {
         String keyword = query.getKeyword();
         if (StringUtils.isNotBlank(keyword)) {
             BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-            boolQueryBuilder.should(QueryBuilders.matchQuery("name", keyword))
-                    .should(QueryBuilders.matchQuery("title", keyword))
+            boolQueryBuilder.should(QueryBuilders.matchQuery("title", keyword))
                     .should(QueryBuilders.matchQuery("content", keyword));
             queryBuilder.withQuery(boolQueryBuilder);
         }
@@ -159,12 +163,12 @@ public class ElasticSearchBgDocumentIndexer implements BgDocumentIndexer {
     @SneakyThrows
     @Override
     public PageVo pageForDocument(BgDocumentPageQuery query) {
-        DefaultElasticsearchPageReader elasticsearchPageReader = new DefaultElasticsearchPageReader(
-                query, BgDocument.class, elasticsearchRestTemplate);
-        PageResponse<Object> pageResponse = elasticsearchPageReader
+        DefaultElasticsearchPageReader elasticsearchPageReader =
+                new DefaultElasticsearchPageReader(elasticsearchRestTemplate, query);
+        PageResponse<BgDocumentVo> pageResponse = elasticsearchPageReader
                 .list(PageRequest.of(query.getPage(), query.getMaxResults()));
         PageVo pageVo = new PageVo();
-        PageContent<Object> pageContent = pageResponse.getContent();
+        PageContent<BgDocumentVo> pageContent = pageResponse.getContent();
         pageVo.setPage(pageResponse.getPageNumber());
         pageVo.setPageSize(pageResponse.getPageSize());
         pageVo.setTotalRecords(pageResponse.getTotalRecords());
@@ -173,24 +177,40 @@ public class ElasticSearchBgDocumentIndexer implements BgDocumentIndexer {
         return pageVo;
     }
 
-    private class DefaultElasticsearchPageReader extends BasicElasticsearchPageReader<BgDocument> {
+    /**
+     * 
+     * @Description: DefaultElasticsearchPageReader
+     * @Author: Fred Feng
+     * @Date: 01/01/2025
+     * @Version 1.0.0
+     */
+    private static class DefaultElasticsearchPageReader
+            extends KeywordBasedElasticsearchPageReader<BgDocument, BgDocumentVo> {
 
-        DefaultElasticsearchPageReader(BgDocumentQuery query, Class<BgDocument> documentClass,
-                ElasticsearchRestTemplate elasticsearchRestTemplate) {
-            super(documentClass, elasticsearchRestTemplate);
+        DefaultElasticsearchPageReader(ElasticsearchRestTemplate elasticsearchRestTemplate,
+                BgDocumentPageQuery query) {
+            super(elasticsearchRestTemplate, BgDocument.class, BgDocumentVo.class,
+                    query.getKeyword(), new String[] {"title", "content"});
             this.query = query;
         }
 
-        private final BgDocumentQuery query;
+        private final BgDocumentPageQuery query;
 
         @Override
-        protected void configureQueryBuilder(NativeSearchQueryBuilder searchQueryBuilder) {
-            ElasticSearchBgDocumentIndexer.this.configureQueryBuilder(searchQueryBuilder, query);
+        protected QueryBuilder getFilter() {
+            BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+            if (query.isFile()) {
+                boolQueryBuilder.filter(QueryBuilders.prefixQuery("path", "file:"));
+            }
+            if (StringUtils.isNotBlank(query.getExtension())) {
+                boolQueryBuilder.filter(QueryBuilders.termQuery("extension", query.getExtension()));
+            }
+            return boolQueryBuilder;
         }
 
         @Override
-        protected Object convertObject(BgDocument document) {
-            return BeanCopyUtils.copyBean(document, BgDocumentVo.class);
+        protected FieldSortBuilder getSort() {
+            return SortBuilders.fieldSort("lastModified").order(SortOrder.DESC);
         }
 
     }

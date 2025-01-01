@@ -1,4 +1,4 @@
-package com.github.budgerigar;
+package com.github.budgerigar.pojo;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -6,13 +6,13 @@ import lombok.Data;
 
 /**
  * 
- * @Description: BgDocumentVo
+ * @Description: BgDocumentDto
  * @Author: Fred Feng
- * @Date: 14/12/2024
+ * @Date: 01/12/2024
  * @Version 1.0.0
  */
 @Data
-public class BgDocumentVo {
+public class BgDocumentDto {
 
     private Serializable id;
     private String name;
@@ -21,4 +21,5 @@ public class BgDocumentVo {
     private String path;
     private LocalDateTime lastModified;
     private String content;
+
 }

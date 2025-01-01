@@ -34,7 +34,7 @@ public class FavortiesContentReader implements FileContentReader {
 
     @Override
     public Iterator<FileContent> readContent(Path path, Context context) throws IOException {
-        Charset charset = (Charset) context.getAttr(Context.FILE_CHARSET, defaultCharset);
+        final Charset charset = (Charset) context.getAttr(Context.FILE_CHARSET, defaultCharset);
         Document document = Jsoup.parse(path, charset.displayName());
         String bodyText = document.body().html();
         if (StringUtils.isBlank(bodyText)) {
@@ -58,22 +58,30 @@ public class FavortiesContentReader implements FileContentReader {
 
             @Override
             public FileContent next() {
-                String content = null;
+                String html;
                 Element link = actualIt.next();
                 String title = link.text().trim();
                 String path = link.absUrl("href");
                 try {
-                    content = htmlContentExtractor.extractHtml(URI.create(path));
+                    html = htmlContentExtractor.extractHtml(URI.create(path));
                 } catch (Exception e) {
                     if (log.isErrorEnabled()) {
                         log.error("[{}]: {}", path, e.getMessage(), e);
                     }
-                    content = "";
+                    html = "";
                 }
                 return new FileContent(fileName, title, "html", path,
-                        lastModfied + (n++) * 60 * 1000, content);
+                        lastModfied + ((n++) * 60 * 1000), getBodyText(html));
             }
         };
+    }
+
+    protected String getBodyText(String html) {
+        if (StringUtils.isBlank(html)) {
+            return "";
+        }
+        Document document = Jsoup.parse(html, "utf-8");
+        return document.body().text();
     }
 
     @Override

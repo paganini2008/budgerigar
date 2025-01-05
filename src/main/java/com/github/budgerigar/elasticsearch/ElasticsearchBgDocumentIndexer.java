@@ -30,7 +30,6 @@ import com.github.doodler.common.page.PageContent;
 import com.github.doodler.common.page.PageRequest;
 import com.github.doodler.common.page.PageResponse;
 import com.github.doodler.common.utils.BeanCopyUtils;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -170,7 +169,6 @@ public class ElasticsearchBgDocumentIndexer implements BgDocumentIndexer {
         }
     }
 
-    @SneakyThrows
     @Override
     public PageVo pageForDocument(BgDocumentPageQuery query) {
         DefaultElasticsearchPageReader elasticsearchPageReader =

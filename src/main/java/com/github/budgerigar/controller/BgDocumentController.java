@@ -16,8 +16,9 @@ import org.springframework.web.multipart.MultipartFile;
 import com.github.budgerigar.BgDocumentIndexer;
 import com.github.budgerigar.doc.BgDocumentProperties;
 import com.github.budgerigar.pojo.BgDocumentPageQuery;
+import com.github.budgerigar.pojo.BgDocumentVo;
 import com.github.doodler.common.ApiResult;
-import com.github.doodler.common.PageVo;
+import com.github.doodler.common.page.PageVo;
 
 /**
  * 
@@ -37,8 +38,9 @@ public class BgDocumentController {
     private BgDocumentIndexer bgDocumentIndexer;
 
     @PostMapping("/page")
-    public ApiResult<PageVo> pageForDocument(@RequestBody BgDocumentPageQuery pageQuery) {
-        PageVo pageVo = bgDocumentIndexer.pageForDocument(pageQuery);
+    public ApiResult<PageVo<BgDocumentVo>> pageForDocument(
+            @RequestBody BgDocumentPageQuery pageQuery) {
+        PageVo<BgDocumentVo> pageVo = bgDocumentIndexer.pageForDocument(pageQuery);
         return ApiResult.ok(pageVo);
     }
 

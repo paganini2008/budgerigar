@@ -28,12 +28,12 @@ import com.github.budgerigar.pojo.BgDocumentDto;
 import com.github.budgerigar.pojo.BgDocumentPageQuery;
 import com.github.budgerigar.pojo.BgDocumentQuery;
 import com.github.budgerigar.pojo.BgDocumentVo;
-import com.github.doodler.common.PageVo;
 import com.github.doodler.common.page.DefaultPageContent;
 import com.github.doodler.common.page.PageContent;
 import com.github.doodler.common.page.PageReader;
 import com.github.doodler.common.page.PageRequest;
 import com.github.doodler.common.page.PageResponse;
+import com.github.doodler.common.page.PageVo;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -227,12 +227,12 @@ public class JdbcBgDocumentIndexer implements BgDocumentIndexer {
 
     @SneakyThrows
     @Override
-    public PageVo pageForDocument(BgDocumentPageQuery query) {
+    public PageVo<BgDocumentVo> pageForDocument(BgDocumentPageQuery query) {
         BgDocumentPageReader pageReader = new BgDocumentPageReader(query);
         PageResponse<BgDocumentVo> pageResponse =
                 pageReader.list(PageRequest.of(query.getPage(), query.getMaxResults()));
         PageContent<BgDocumentVo> pageContent = pageResponse.getContent();
-        return new PageVo(pageContent.getContent(), pageResponse.getPageNumber(),
+        return new PageVo<BgDocumentVo>(pageContent.getContent(), pageResponse.getPageNumber(),
                 pageResponse.getPageSize(), pageResponse.getTotalRecords(),
                 pageContent.getNextToken());
     }

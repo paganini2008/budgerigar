@@ -24,11 +24,11 @@ import com.github.budgerigar.pojo.BgDocumentDto;
 import com.github.budgerigar.pojo.BgDocumentPageQuery;
 import com.github.budgerigar.pojo.BgDocumentQuery;
 import com.github.budgerigar.pojo.BgDocumentVo;
-import com.github.doodler.common.PageVo;
 import com.github.doodler.common.elasticsearch.KeywordBasedElasticsearchPageReader;
 import com.github.doodler.common.page.PageContent;
 import com.github.doodler.common.page.PageRequest;
 import com.github.doodler.common.page.PageResponse;
+import com.github.doodler.common.page.PageVo;
 import com.github.doodler.common.utils.BeanCopyUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -170,12 +170,12 @@ public class ElasticsearchBgDocumentIndexer implements BgDocumentIndexer {
     }
 
     @Override
-    public PageVo pageForDocument(BgDocumentPageQuery query) {
+    public PageVo<BgDocumentVo> pageForDocument(BgDocumentPageQuery query) {
         DefaultElasticsearchPageReader elasticsearchPageReader =
                 new DefaultElasticsearchPageReader(elasticsearchRestTemplate, query);
         PageResponse<BgDocumentVo> pageResponse = elasticsearchPageReader
                 .list(PageRequest.of(query.getPage(), query.getMaxResults()));
-        PageVo pageVo = new PageVo();
+        PageVo<BgDocumentVo> pageVo = new PageVo<>();
         PageContent<BgDocumentVo> pageContent = pageResponse.getContent();
         pageVo.setPage(pageResponse.getPageNumber());
         pageVo.setPageSize(pageResponse.getPageSize());

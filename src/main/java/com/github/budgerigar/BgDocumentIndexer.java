@@ -7,7 +7,7 @@ import com.github.budgerigar.pojo.BgDocumentDto;
 import com.github.budgerigar.pojo.BgDocumentPageQuery;
 import com.github.budgerigar.pojo.BgDocumentQuery;
 import com.github.budgerigar.pojo.BgDocumentVo;
-import com.github.doodler.common.PageVo;
+import com.github.doodler.common.page.PageVo;
 
 /**
  * 
@@ -38,6 +38,6 @@ public interface BgDocumentIndexer {
 
     List<BgDocumentVo> queryForDocument(BgDocumentQuery query);
 
-    PageVo pageForDocument(BgDocumentPageQuery query);
+    PageVo<BgDocumentVo> pageForDocument(BgDocumentPageQuery query);
 
 }

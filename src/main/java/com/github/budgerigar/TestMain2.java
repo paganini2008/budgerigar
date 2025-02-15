@@ -1,18 +1,54 @@
 package com.github.budgerigar;
 
-import org.springframework.expression.Expression;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class TestMain2 {
 
+    private static boolean isPrimeNumber(int value) {
+        if (value <= 1) {
+            return false;
+        }
+        for (int i = 2; i < Math.sqrt(value); i++) {
+            if (value % i == 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static int randomInt() {
+        return ThreadLocalRandom.current().nextInt(1, 10000);
+    }
+
     public static void main(String[] args) {
-        SpelExpressionParser parser = new SpelExpressionParser();
+        // int n = 0;
+        // for (int i = 1; i < 10000; i++) {
+        // if (isPrimeNumber(i)) {
+        // System.out.println(i);
+        // if (n++ == 100) {
+        // break;
+        // }
+        // } else {
+        //
+        // }
+        // }
+        int n = 0;
+        int v;
+        Set<Integer> set = new HashSet<>();
+        for (int i = 0; i < Integer.MAX_VALUE; i++) {
+            v = randomInt();
+            if (isPrimeNumber(v)) {
+                // System.out.println(v);
+                set.add(v);
+                if (set.size() == 100) {
+                    break;
+                }
+            }
+        }
 
-        // 直接解析常量
-        Expression expression = parser.parseExpression("'Hello Spring Expression!'.toUpperCase()");
-        String result = expression.getValue(String.class);
-        System.out.println(result); // 输出：HELLO SPRING EXPRESSION!
-
+        System.out.println(set);
     }
 
 }

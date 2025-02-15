@@ -234,7 +234,7 @@ public class JdbcBgDocumentIndexer implements BgDocumentIndexer {
         PageContent<BgDocumentVo> pageContent = pageResponse.getContent();
         return new PageVo<BgDocumentVo>(pageContent.getContent(), pageResponse.getPageNumber(),
                 pageResponse.getPageSize(), pageResponse.getTotalRecords(),
-                pageContent.getNextToken());
+                pageContent.getNextToken(), pageResponse.hasNextPage());
     }
 
     @RequiredArgsConstructor

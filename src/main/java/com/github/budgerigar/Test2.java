@@ -6,8 +6,8 @@ import java.util.Map;
 public class Test2 {
 
     public static void main(String[] args) {
-        String a = "efk mnb lk12 haa 09112ukl";
-        String b = "mnb ekf k21l aha 0ukl9211";
+        String a = "efkmnblk12haa09112ukl";
+        String b = "mnbekfk21laha0ukl9211";
         System.out.println(compare(a, b));
     }
 

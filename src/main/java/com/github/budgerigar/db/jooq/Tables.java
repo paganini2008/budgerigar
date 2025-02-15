@@ -10,7 +10,7 @@ import com.github.budgerigar.db.jooq.tables.BgrigarDocument;
 /**
  * Convenience access to all tables in PUBLIC.
  */
-@SuppressWarnings({ "all", "unchecked", "rawtypes" })
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class Tables {
 
     /**
